@@ -7,16 +7,13 @@
     .admin-container { max-width: 500px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     h1 { font-size: 20px; text-align: center; border-bottom: 2px solid #4dbed4; padding-bottom: 10px;}
     .section-title { font-size: 16px; border-left: 4px solid #4dbed4; padding-left: 10px; margin-top: 30px; margin-bottom: 15px; font-weight: bold;}
-    
     .type-option { display: block; margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; transition: 0.2s;}
     .type-option:hover { background: #f0f8fa; }
     .type-option input { margin-right: 10px; transform: scale(1.2); }
     .desc { font-size: 12px; color: #666; margin-left: 28px; margin-top: 5px; display: block;}
-    
     .img-input-group { margin-bottom: 15px; }
     .img-input-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; }
     .img-input-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 13px; }
-    
     button { width: 100%; padding: 15px; background: #e55353; color: #fff; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px;}
     button:hover { opacity: 0.9; }
     button:disabled { background: #ccc; }
@@ -25,36 +22,28 @@
 </head>
 <body>
   <div class="admin-container">
-    <h1>運営管理者専用 管理パネル</h1>
+    <h1>BOSS専用 管理パネル</h1>
     
     <div class="section-title">① 表示するアンケートの型</div>
-    <label class="type-option">
-      <input type="radio" name="surveyType" value="type1"> <b>Type 1 (フルバージョン)</b>
-      <span class="desc">全ての設問を表示します。詳細な分析が必要な場合に最適です。</span>
-    </label>
-    
-    <label class="type-option">
-      <input type="radio" name="surveyType" value="type2"> <b>Type 2 (スタンダード)</b>
-      <span class="desc">基本情報と満足度、今後の案内希望のみの標準的な構成です。</span>
-    </label>
-    
-    <label class="type-option">
-      <input type="radio" name="surveyType" value="type3"> <b>Type 3 (簡易バージョン)</b>
-      <span class="desc">お客様のお名前、メアド、総合満足度のみ。サクッと回答してほしい時に。</span>
-    </label>
+    <label class="type-option"><input type="radio" name="surveyType" value="type1"> <b>Type 1 (フル)</b><span class="desc">全17問。詳細分析用。</span></label>
+    <label class="type-option"><input type="radio" name="surveyType" value="type2"> <b>Type 2 (標準)</b><span class="desc">全10問。標準的な構成。</span></label>
+    <label class="type-option"><input type="radio" name="surveyType" value="type3"> <b>Type 3 (簡易)</b><span class="desc">全4問。満足度のみ。</span></label>
 
     <div class="section-title">② ランダム表示する画像URL</div>
+    <div class="img-input-group"><label>画像URL 1</label><input type="text" id="img1" placeholder="https://..."></div>
+    <div class="img-input-group"><label>画像URL 2</label><input type="text" id="img2" placeholder="https://..."></div>
+    <div class="img-input-group"><label>画像URL 3</label><input type="text" id="img3" placeholder="https://..."></div>
+
+    <div class="section-title">③ 署名（footer）テキスト</div>
     <div class="img-input-group">
-      <label>画像URL 1</label>
-      <input type="text" id="img1" placeholder="https://...">
+      <label>署名・コピーライト</label>
+      <input type="text" id="footerText" placeholder="produced by ...">
     </div>
+
+    <div class="section-title">④ 更新パスワード</div>
     <div class="img-input-group">
-      <label>画像URL 2</label>
-      <input type="text" id="img2" placeholder="https://...">
-    </div>
-    <div class="img-input-group">
-      <label>画像URL 3</label>
-      <input type="text" id="img3" placeholder="https://...">
+      <label>管理者用パスワード</label>
+      <input type="password" id="adminPwd" placeholder="パスワードを入力してください">
     </div>
 
     <button onclick="saveSettings()" id="saveBtn" disabled>データを読み込み中...</button>
@@ -62,71 +51,58 @@
   </div>
 
   <script>
-    // 【重要】GASでデプロイしたWebアプリのURLをここに貼り付けてください
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzC_3R-9fO7yyrtcACKK9pHrt8BhGjLun8osobOJqHrY7_9-prSbfYfXdtRZ6Il8hmRwg/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwVMcnMY_ezduP_Fm7rXt6VSCsD_-FNoZN3QeOzRxOtDE_uXLQvZ-9zepVdnyZLAtqTtA/exec';
 
     window.onload = function() {
-      // 初期データの取得
+      const savedPwd = localStorage.getItem('surveyAdminPwd');
+      if (savedPwd) document.getElementById('adminPwd').value = savedPwd;
+
       fetch(GAS_URL + '?action=getSettings', { redirect: "follow" })
         .then(res => res.json())
         .then(data => {
           if (data.success) {
-            // 現在の型を選択状態にする
             const radio = document.querySelector(`input[name="surveyType"][value="${data.surveyType}"]`);
             if (radio) radio.checked = true;
-
-            // 画像URLを入力欄にセット
             document.getElementById('img1').value = data.images[0] || '';
             document.getElementById('img2').value = data.images[1] || '';
             document.getElementById('img3').value = data.images[2] || '';
-
+            // 署名テキストを読み込み
+            document.getElementById('footerText').value = data.footerText || '';
             const btn = document.getElementById('saveBtn');
-            btn.disabled = false;
-            btn.innerText = 'この設定で本番環境を更新する';
+            btn.disabled = false; btn.innerText = 'この設定で本番環境を更新する';
           }
         })
-        .catch(err => {
-          document.getElementById('saveBtn').innerText = '通信エラーが発生しました';
-        });
+        .catch(err => { document.getElementById('saveBtn').innerText = '通信エラー'; });
     };
 
     function saveSettings() {
       const btn = document.getElementById('saveBtn');
       const msg = document.getElementById('msg');
+      const pwd = document.getElementById('adminPwd').value;
+      if (!pwd) { msg.style.color = 'red'; msg.innerText = 'パスワードが必要です'; return; }
       
       const payload = {
         surveyType: document.querySelector('input[name="surveyType"]:checked').value,
         image1: document.getElementById('img1').value,
         image2: document.getElementById('img2').value,
-        image3: document.getElementById('img3').value
+        image3: document.getElementById('img3').value,
+        footerText: document.getElementById('footerText').value // 署名も送信
       };
       
-      btn.disabled = true;
-      btn.innerText = '更新中...';
-      msg.innerText = '';
-      
-      // GASのAPIへPOST送信
+      btn.disabled = true; btn.innerText = '更新中...'; msg.innerText = '';
       fetch(GAS_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'saveSettings', data: payload })
+        body: JSON.stringify({ action: 'saveSettings', password: pwd, data: payload })
       })
       .then(res => res.json())
       .then(res => {
         if (res.success) {
-          msg.innerText = res.message;
-        } else {
-          msg.style.color = 'red';
-          msg.innerText = 'エラー: ' + res.error;
-        }
-        btn.disabled = false;
-        btn.innerText = 'この設定で本番環境を更新する';
+          msg.style.color = 'green'; msg.innerText = res.message;
+          localStorage.setItem('surveyAdminPwd', pwd);
+        } else { msg.style.color = 'red'; msg.innerText = res.error; }
+        btn.disabled = false; btn.innerText = 'この設定で本番環境を更新する';
       })
-      .catch(err => {
-        msg.style.color = 'red';
-        msg.innerText = '通信エラーが発生しました';
-        btn.disabled = false;
-        btn.innerText = 'この設定で本番環境を更新する';
-      });
+      .catch(err => { msg.style.color = 'red'; msg.innerText = '通信エラー'; btn.disabled = false; });
     }
   </script>
 </body>
