@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* ＝＝＝ ベーススタイル（PC・共通） ＝＝＝ */
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+      color: #333;
+      background-color: #fcfcfc;
+      margin: 0;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .header-image {
+      width: 100%;
+      height: 120px;
+      background-color: #eee; /* デフォルト背景 */
+      background-position: center;
+      background-size: cover;
+      border-radius: 8px 8px 0 0;
+      margin: -40px -40px 30px -40px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: normal;
+      margin-bottom: 20px;
+      letter-spacing: 2px;
+    }
+    .intro-text {
+      text-align: center;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+    .form-group {
+      margin-bottom: 25px;
+    }
+    label.question-label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .req {
+      background-color: #e55353;
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-left: 8px;
+      font-weight: normal;
+    }
+    .opt {
+      background-color: #8fa0aa;
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-left: 8px;
+      font-weight: normal;
+    }
+    input[type="text"], input[type="email"], input[type="number"], select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+      -webkit-appearance: none;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .radio-box, .checkbox-box {
+      border: 1px solid #ddd;
+      padding: 12px 10px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .radio-box input, .checkbox-box input {
+      margin-right: 8px;
+      transform: scale(1.2);
+    }
+    
+    /* 星評価のスタイル */
+    .star-rating {
+      display: inline-flex;
+      flex-direction: row-reverse;
+      justify-content: flex-end;
+    }
+    .star-rating input { display: none; }
+    .star-rating label {
+      font-size: 30px;
+      color: #dcdcdc;
+      cursor: pointer;
+      padding: 0 5px;
+      transition: color 0.2s;
+    }
+    .star-rating input:checked ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+      color: #90c2d3;
+    }
+
+    /* 1〜5スケールのスタイル */
+    .scale-rating {
+      display: flex;
+      gap: 5px;
+    }
+    .scale-rating input { display: none; }
+    .scale-rating label {
+      flex: 1;
+      text-align: center;
+      background: #f0f4f8;
+      padding: 12px 0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #555;
+      transition: all 0.2s;
+    }
+    .scale-rating input:checked + label {
+      background: #90c2d3;
+      color: #fff;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      background-color: #4dbed4;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: opacity 0.2s;
+      -webkit-appearance: none;
+    }
+    .submit-btn:hover {
+      opacity: 0.9;
+    }
+    .submit-btn:disabled {
+      background-color: #ccc;
+    }
+    #loadingScreen {
+      text-align: center; padding: 50px; font-weight: bold; color: #666;
+    }
+    #surveyContent {
+      display: none; /* 読み込み完了まで隠す */
+    }
+
+    @media screen and (max-width: 600px) {
+      body { padding: 20px 10px; }
+      .container { padding: 20px; }
+      .header-image { height: 100px; margin: -20px -20px 20px -20px; }
+      h1 { font-size: 20px; }
+      .grid-2col { grid-template-columns: 1fr; }
+      .star-rating label { font-size: 35px; }
+      .scale-rating { gap: 3px; }
+      .scale-rating label { padding: 10px 0; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div id="loadingScreen">アンケートを読み込み中...</div>
+    
+    <div id="surveyContent">
+      <div class="header-image" id="headerImg"></div>
+      <h1>体験後アンケート</h1>
+      <div class="intro-text">
+        本日はご参加いただき誠にありがとうございます。<br>今回の体験につきまして、率直なご意見をお聞かせいただければと思います。<br>
+        <span class="conditional" data-show="type1" style="display:none;">設問数：17問<br>所要時間：約5分</span>
+        <span class="conditional" data-show="type2" style="display:none;">設問数：10問<br>所要時間：約3分</span>
+        <span class="conditional" data-show="type3" style="display:none;">設問数：4問<br>所要時間：約1分</span>
+      </div>
+
+      <form id="surveyForm" onsubmit="event.preventDefault(); validateAndSubmit();">
+
+        <div class="form-group">
+          <label class="question-label">お客様のお名前<span class="req">必須</span></label>
+          <input type="text" name="customerName" placeholder="お名前" required>
+        </div>
+
+        <div class="form-group">
+          <label class="question-label">メールアドレス<span class="req">必須</span></label>
+          <input type="email" id="email" name="email" placeholder="mail@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="question-label">確認のため再度ご入力ください</label>
+          <input type="email" id="emailConfirm" placeholder="mail@example.com" required>
+          <div id="emailError" style="color: red; font-size: 12px; margin-top: 5px; display: none;">メールアドレスが一致しません。</div>
+        </div>
+
+        <div class="conditional" data-show="type1,type2" style="display:none;">
+          <div class="form-group">
+            <label class="question-label">性別<span class="req">必須</span></label>
+            <div class="grid-2col">
+              <label class="radio-box"><input type="radio" name="gender" value="男性" required> 男性</label>
+              <label class="radio-box"><input type="radio" name="gender" value="女性"> 女性</label>
+              <label class="radio-box"><input type="radio" name="gender" value="その他"> その他</label>
+              <label class="radio-box"><input type="radio" name="gender" value="未回答"> 未回答</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="question-label">年齢<span class="req">必須</span></label>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="number" name="age" min="0" max="120" placeholder="0" style="width: 100px;" required> 歳
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="question-label">お住まい<span class="req">必須</span></label>
+            <select name="prefecture" required>
+              <option value="">選択してください</option>
+              <option value="北海道">北海道</option><option value="青森県">青森県</option><option value="岩手県">岩手県</option>
+              <option value="宮城県">宮城県</option><option value="秋田県">秋田県</option><option value="山形県">山形県</option>
+              <option value="福島県">福島県</option><option value="茨城県">茨城県</option><option value="栃木県">栃木県</option>
+              <option value="群馬県">群馬県</option><option value="埼玉県">埼玉県</option><option value="千葉県">千葉県</option>
+              <option value="東京都">東京都</option><option value="神奈川県">神奈川県</option><option value="新潟県">新潟県</option>
+              <option value="富山県">富山県</option><option value="石川県">石川県</option><option value="福井県">福井県</option>
+              <option value="山梨県">山梨県</option><option value="長野県">長野県</option><option value="岐阜県">岐阜県</option>
+              <option value="静岡県">静岡県</option><option value="愛知県">愛知県</option><option value="三重県">三重県</option>
+              <option value="滋賀県">滋賀県</option><option value="京都府">京都府</option><option value="大阪府">大阪府</option>
+              <option value="兵庫県">兵庫県</option><option value="奈良県">奈良県</option><option value="和歌山県">和歌山県</option>
+              <option value="鳥取県">鳥取県</option><option value="島根県">島根県</option><option value="岡山県">岡山県</option>
+              <option value="広島県">広島県</option><option value="山口県">山口県</option><option value="徳島県">徳島県</option>
+              <option value="香川県">香川県</option><option value="愛媛県">愛媛県</option><option value="高知県">高知県</option>
+              <option value="福岡県">福岡県</option><option value="佐賀県">佐賀県</option><option value="長崎県">長崎県</option>
+              <option value="熊本県">熊本県</option><option value="大分県">大分県</option><option value="宮崎県">宮崎県</option>
+              <option value="鹿児島県">鹿児島県</option><option value="沖縄県">沖縄県</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="question-label">お問合せ・お申込みくださった理由に最も近いものを選んでください。<span class="req">必須</span></label>
+            <select name="reason" required>
+              <option value="">選択してください</option>
+              <option value="お客様ご自身で観光されるよりもガイドをつけて散策したいため">お客様ご自身で観光されるよりもガイドをつけて散策したいため</option>
+              <option value="歴史を知りたいため">歴史を知りたいため</option>
+              <option value="旬や地域の情報を知りたいため">旬や地域の情報を知りたいため</option>
+              <option value="業務に必要だったため">業務に必要だったため</option>
+              <option value="その他">その他</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="question-label">担当ガイドの対応時間の長さはいかがでしたか。<span class="req">必須</span></label>
+            <div class="grid-2col">
+              <label class="radio-box"><input type="radio" name="lengthRating" value="とても長いと感じた" required> とても長いと感じた</label>
+              <label class="radio-box"><input type="radio" name="lengthRating" value="少し長いと感じた"> 少し長いと感じた</label>
+              <label class="radio-box"><input type="radio" name="lengthRating" value="ちょうどよいと感じた"> ちょうどよいと感じた</label>
+              <label class="radio-box"><input type="radio" name="lengthRating" value="少し短いと感じた"> 少し短いと感じた</label>
+              <label class="radio-box"><input type="radio" name="lengthRating" value="とても短いと感じた"> とても短いと感じた</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="question-label">担当ガイドの応対はいかがでしたか。<span class="req">必須</span></label>
+            <div class="star-rating">
+              <input type="radio" id="cnt5" name="contentRating" value="5" required><label for="cnt5">★</label>
+              <input type="radio" id="cnt4" name="contentRating" value="4"><label for="cnt4">★</label>
+              <input type="radio" id="cnt3" name="contentRating" value="3"><label for="cnt3">★</label>
+              <input type="radio" id="cnt2" name="contentRating" value="2"><label for="cnt2">★</label>
+              <input type="radio" id="cnt1" name="contentRating" value="1"><label for="cnt1">★</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="conditional" data-show="type1" style="display:none;">
+          <div class="form-group">
+            <label class="question-label">当サイトを知ったきっかけを教えて下さい。<span class="req">必須</span></label>
+            <div class="grid-2col">
+              <label class="checkbox-box"><input type="checkbox" name="source" value="テレビ"> テレビ</label>
+              <label class="checkbox-box"><input type="checkbox" name="source" value="ラジオ"> ラジオ</label>
+              <label class="checkbox-box"><input type="checkbox" name="source" value="新聞"> 新聞</label>
+              <label class="checkbox-box"><input type="checkbox" name="source" value="雑誌"> 雑誌</label>
+              <label class="checkbox-box"><input type="checkbox" name="source" value="Webメディア"> Webメディア</label>
+              <label class="checkbox-box"><input type="checkbox" name="source" value="ネット広告"> ネット広告</label>
+              <label class="checkbox-box"><input type="checkbox" name="source" value="メルマガ"> メルマガ</label>
+              <label class="checkbox-box"><input type="checkbox" name="source" value="SNS・ブログ"> SNS・ブログ</label>
+              <label class="checkbox-box"><input type="checkbox" name="source" value="チラシ"> チラシ</label>
+              <label class="checkbox-box"><input type="checkbox" name="source" value="友人・知人"> 友人・知人</label>
+              <label class="checkbox-box"><input type="checkbox" name="source" value="その他"> その他</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="question-label">担当ガイドの印象について当てはまるものを全てお選びください。<span class="req">必須</span></label>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label class="checkbox-box"><input type="checkbox" name="impression" value="快適だった"> 快適だった</label>
+              <label class="checkbox-box"><input type="checkbox" name="impression" value="話しやすかった"> 話しやすかった</label>
+              <label class="checkbox-box"><input type="checkbox" name="impression" value="雰囲気がよかった"> 雰囲気がよかった</label>
+              <label class="checkbox-box"><input type="checkbox" name="impression" value="内容が難しかった"> 内容が難しかった</label>
+              <label class="checkbox-box"><input type="checkbox" name="impression" value="冗長だった"> 冗長だった</label>
+              <label class="checkbox-box"><input type="checkbox" name="impression" value="心動かされた"> 心動かされた</label>
+              <label class="checkbox-box"><input type="checkbox" name="impression" value="テンポが遅かった"> テンポが遅かった</label>
+              <label class="checkbox-box"><input type="checkbox" name="impression" value="準備が不十分だった"> 準備が不十分だった</label>
+              <label class="checkbox-box"><input type="checkbox" name="impression" value="声がよく聞こえた"> 声がよく聞こえた</label>
+              <label class="checkbox-box"><input type="checkbox" name="impression" value="声がよく聞こえなかった"> 声がよく聞こえなかった</label>
+              <label class="checkbox-box"><input type="checkbox" name="impression" value="その他"> その他</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="question-label">お客様満足度として近いものを選んでください。<span class="req">必須</span></label>
+            <div class="grid-2col">
+              <label class="radio-box"><input type="radio" name="customerSatisfaction" value="非常に満足" required> 非常に満足</label>
+              <label class="radio-box"><input type="radio" name="customerSatisfaction" value="満足"> 満足</label>
+              <label class="radio-box"><input type="radio" name="customerSatisfaction" value="普通"> 普通</label>
+              <label class="radio-box"><input type="radio" name="customerSatisfaction" value="不満"> 不満</label>
+              <label class="radio-box"><input type="radio" name="customerSatisfaction" value="非常に不満"> 非常に不満</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="question-label">ガイドの内容に対し、参加費はどのように感じましたか。<span class="req">必須</span></label>
+            <div class="scale-rating">
+              <input type="radio" id="fee1" name="feeRating" value="1" required><label for="fee1">1</label>
+              <input type="radio" id="fee2" name="feeRating" value="2"><label for="fee2">2</label>
+              <input type="radio" id="fee3" name="feeRating" value="3"><label for="fee3">3</label>
+              <input type="radio" id="fee4" name="feeRating" value="4"><label for="fee4">4</label>
+              <input type="radio" id="fee5" name="feeRating" value="5"><label for="fee5">5</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="question-label">今回応対しましたガイドに担当してもらいたいと思いますか。<span class="req">必須</span></label>
+            <div class="scale-rating">
+              <input type="radio" id="nxt1" name="nextParticipation" value="1" required><label for="nxt1">1</label>
+              <input type="radio" id="nxt2" name="nextParticipation" value="2"><label for="nxt2">2</label>
+              <input type="radio" id="nxt3" name="nextParticipation" value="3"><label for="nxt3">3</label>
+              <input type="radio" id="nxt4" name="nextParticipation" value="4"><label for="nxt4">4</label>
+              <input type="radio" id="nxt5" name="nextParticipation" value="5"><label for="nxt5">5</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="question-label">今回の体験をご家族やご友人にどの程度すすめたいですか。<span class="req">必須</span></label>
+            <div class="scale-rating">
+              <input type="radio" id="rec1" name="recommendRating" value="1" required><label for="rec1">1</label>
+              <input type="radio" id="rec2" name="recommendRating" value="2"><label for="rec2">2</label>
+              <input type="radio" id="rec3" name="recommendRating" value="3"><label for="rec3">3</label>
+              <input type="radio" id="rec4" name="recommendRating" value="4"><label for="rec4">4</label>
+              <input type="radio" id="rec5" name="recommendRating" value="5"><label for="rec5">5</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="question-label">総合的に見て、今回の体験にどの程度満足されましたか。<span class="req">必須</span></label>
+          <div class="star-rating">
+            <input type="radio" id="ovr5" name="overallRating" value="5" required><label for="ovr5">★</label>
+            <input type="radio" id="ovr4" name="overallRating" value="4"><label for="ovr4">★</label>
+            <input type="radio" id="ovr3" name="overallRating" value="3"><label for="ovr3">★</label>
+            <input type="radio" id="ovr2" name="overallRating" value="2"><label for="ovr2">★</label>
+            <input type="radio" id="ovr1" name="overallRating" value="1"><label for="ovr1">★</label>
+          </div>
+        </div>
+
+        <div class="conditional" data-show="type1,type2" style="display:none;">
+          <div class="form-group">
+            <label class="question-label">今後のイベント案内を希望しますか。<span class="req">必須</span></label>
+            <div class="grid-2col">
+              <label class="radio-box"><input type="radio" name="futureInfo" value="希望する" required> 希望する</label>
+              <label class="radio-box"><input type="radio" name="futureInfo" value="希望しない"> 希望しない</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="question-label">今回の体験に対するご意見・ご感想をご自由にご記入ください。<span class="opt">任意</span></label>
+          <textarea name="comments"></textarea>
+        </div>
+
+        <button type="submit" id="submitBtn" class="submit-btn">回答する</button>
+
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // 【重要】GASでデプロイしたWebアプリのURLをここに貼り付けてください
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycby8JuejASSs5TpzOUF3Nj-btk5rw_pzchI7jwuccvFdgXuXkBmrwZRb-FfD6cK9Jh8GAQ/exec';
+
+    window.onload = function() {
+      // ページ読み込み時にGASから設定情報（型・画像）を取得
+      fetch(GAS_URL + '?action=getSettings', { redirect: "follow" })
+        .then(res => res.json())
+        .then(data => {
+          if(data.success) {
+            // 画像のセット
+            const randomImage = data.images[Math.floor(Math.random() * data.images.length)];
+            document.getElementById('headerImg').style.backgroundImage = `url('${randomImage}')`;
+
+            // アンケートの型に応じた表示切り替え
+            const currentType = data.surveyType;
+            document.querySelectorAll('.conditional').forEach(section => {
+              const showTypes = section.getAttribute('data-show').split(',');
+              if(showTypes.includes(currentType)) {
+                section.style.display = 'block';
+              } else {
+                section.style.display = 'none';
+                // 非表示になったエリアの required 属性を外す（送信エラー防止）
+                section.querySelectorAll('[required]').forEach(el => el.removeAttribute('required'));
+              }
+            });
+
+            // ローディング画面を隠してアンケートを表示
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('surveyContent').style.display = 'block';
+          } else {
+            alert('設定データの取得に失敗しました。');
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('サーバーとの通信エラーが発生しました。');
+        });
+    };
+
+    function validateAndSubmit() {
+      const email = document.getElementById('email').value;
+      const emailConfirm = document.getElementById('emailConfirm').value;
+      const errorMsg = document.getElementById('emailError');
+      
+      if (email !== emailConfirm) {
+        errorMsg.style.display = 'block';
+        document.getElementById('emailConfirm').focus();
+        return;
+      }
+      errorMsg.style.display = 'none';
+
+      // 表示されているエリア内のみ必須チェックボックスを検証
+      const visibleSections = Array.from(document.querySelectorAll('.conditional')).filter(el => el.style.display !== 'none');
+      const isVisible = (element) => visibleSections.some(section => section.contains(element));
+
+      const sourceInput = document.querySelector('input[name="source"]');
+      if (sourceInput && isVisible(sourceInput)) {
+        const sources = document.querySelectorAll('input[name="source"]:checked');
+        if(sources.length === 0) {
+          alert('「当サイトを知ったきっかけ」を1つ以上選択してください。');
+          return;
+        }
+      }
+
+      const impressionInput = document.querySelector('input[name="impression"]');
+      if (impressionInput && isVisible(impressionInput)) {
+        const impressions = document.querySelectorAll('input[name="impression"]:checked');
+        if(impressions.length === 0) {
+          alert('「担当ガイドの印象」を1つ以上選択してください。');
+          return;
+        }
+      }
+
+      const form = document.getElementById('surveyForm');
+      const formData = new FormData(form);
+      const payload = Object.fromEntries(formData.entries());
+      
+      payload.sendEmail = confirm('アンケート回答内容をメールで送りますか？\n（「OK」を選択すると、ご回答内容の控えがメールで届きます）');
+
+      if (payload.source !== undefined) {
+        payload.source = formData.getAll('source').join(', ');
+      }
+      if (payload.impression !== undefined) {
+        payload.impression = formData.getAll('impression').join(', ');
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerText = '送信中...';
+
+      // GASのAPIへPOST送信
+      fetch(GAS_URL, {
+        method: 'POST',
+        // CORS対策として application/json ヘッダーは付与せず送信
+        body: JSON.stringify({ action: 'submitSurvey', data: payload })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          alert('アンケートのご回答ありがとうございました。');
+          form.reset();
+          window.scrollTo(0, 0);
+        } else {
+          alert('エラーが発生しました: ' + res.error);
+        }
+        btn.disabled = false;
+        btn.innerText = '回答する';
+      })
+      .catch(err => {
+        alert('送信エラーが発生しました。');
+        btn.disabled = false;
+        btn.innerText = '回答する';
+      });
+    }
+  </script>
+</body>
+</html>
